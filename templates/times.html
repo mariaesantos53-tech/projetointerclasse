@@ -22,8 +22,12 @@
                     <input type="text" id="nome" name="nome" required>
                 </div>
                 <div class="campo campo-cor">
-                    <label for="cor">Cor</label>
-                    <input type="text" id="cor" name="cor" placeholder="Ex: Azul">
+                    <label for= "turma">turma</label>
+                    <input type="text" id="turma" name="turma" >
+                </div>
+                <div class="campo campo-cor">
+                    <label for= "responsavel">responsavel</label>
+                    <input type="text" id="responsavel" name="responsavel" >
                 </div>
             </div>
             <div class="acoes-form">
@@ -38,7 +42,26 @@
         <h2>Lista de Times</h2>
         {% if times %}
         <table>
-<!--           Insira sua tabela aqui -->
+            <thead>
+            <tr>
+                <th>Id</th>
+                <th>Nome</th>
+                <th>Turma</th>
+                <th>Responsável</th>
+            </tr>
+
+            </thead>
+            <tbody>
+            {% for time in times%}
+            <tr>
+                <td>{{time.id}}</td>
+                <td>{{time.nome}}</td>
+                <td>{{time.responsavel}}</td>
+                <td>{{time.turma}}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+
         </table>
         {% else %}
             <p class="vazio">Nenhum time cadastrado ainda.</p>
