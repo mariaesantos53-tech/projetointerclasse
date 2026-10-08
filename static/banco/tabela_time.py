@@ -11,6 +11,14 @@ def select_todos():
     # 2-executar o select
     times = db_session.execute(times_sql).scalars().all()
     return times
+
+def select_quantidade_total():
+    times_sql = select(Time)
+
+
+
+
+
 def salvar(nome,responsavel,turma):
     try:
         novo_times = Time(nome=nome, responsavel=responsavel, turma=turma)
