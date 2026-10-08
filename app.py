@@ -1,5 +1,3 @@
-from logging import exception
-
 from flask import Flask, render_template, request, redirect, url_for, flash
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -13,28 +11,27 @@ app.secret_key = "chave-secreta-interclasse-2026"
 
 @app.route("/")
 def dashboard():
-    times = tabela_time.select_todos()
+    times = tabela_time.select_quantidade_total()
 
-    jogadores = tabela_jogador.select_todos_jogadores()
+    jogadores = tabela_jogador.select_quantidade_total()
 
-    partidas = tabela_partida.select_todas_partida()
+    partidas = tabela_partida.select_quantidade_total()
 
     return render_template(
         "dashboard.html",
-        total_jogadores=len(jogadores),
-        total_times=len(times),
-        total_partidas=len(partidas),
+        total_jogadores= jogadores,
+        total_times= times,
+        total_partidas= partidas,
 
     )
 
 
 @app.route("/jogadores")
 def listar_jogadores():
-    jogadores_sql = select(Jogador)
-    jogadores = db_session.execute(jogadores_sql).scalars().all()
-    times = tabela_time.select_todos()
 
-    return render_template("jogadores.html", jogadores=jogadores, times=times)
+    times = tabela_time.select_todos()
+    jogadores = tabela_jogador.select_todos_jogadores()
+    return render_template("jogadores.html", jogadores=jogadores)
 
 
 @app.route("/jogadores/novo", methods=["GET", "POST"])
@@ -49,21 +46,18 @@ def novo_jogador():
         # 2- verificar se foi digitado
         if not nome:
             flash('Preencha o nome', 'erro')
-            return redirect(url_for(novo_jogador))
+            return redirect(url_for("novo_jogador"))
         if not posicao:
             flash('Preencha o posicao do jogador', 'erro')
-            return redirect(url_for(novo_jogador))
+            return redirect(url_for("novo_jogador"))
         if not numero_camisa:
             flash('Preencha o numero_camisa', 'erro')
-            return redirect(url_for(novo_jogador))
+            return redirect(url_for("novo_jogador"))
         if not time_id:
             flash('Preencha o time', 'erro')
 
         #     3 - salvar no banco
-
-
-    tabela_jogador.salvar_jogadores(nome = nome,numero_camisa=numero_camisa,time_id = time_id)
-
+        tabela_jogador.salvar_jogadores(nome=nome,numero_camisa=numero_camisa,posicao=posicao,time_id= time_id)
 
 
     #     select times para escolher no formulario
@@ -92,16 +86,16 @@ def novo_time():
         # verificar se foi digitado
         if not nome:
             flash("Preencha o nome", "error")
-            return redirect(url_for(novo_time))
+            return redirect(url_for("novo_time"))
 
         if not responsavel:
             flash("Preencha com o responsável", "error")
-            return redirect(url_for(novo_time))
+            return redirect(url_for("novo_time"))
 
 
         if not turma:
             flash("Preencha com a turma", "error")
-            return redirect(url_for(novo_time))
+            return redirect(url_for("novo_time"))
 
         tabela_time.salvar(nome = nome, responsavel = responsavel, turma = turma)
 
@@ -113,12 +107,8 @@ def novo_time():
 @app.route("/partidas")
 def listar_partidas():
 
-    partidas_sql = select(Partida)
-    partidas = db_session.execute(partidas_sql).scalars().all()
-
-    times_sql = select(Time)
-    times = db_session.execute(times_sql).scalars().all()
-    return render_template("partidas.html", partidas=partidas, times=times)
+    partidas = tabela_partida.select_todas_partidas()
+    return render_template("partidas.html", partidas=partidas)
 
 
 
@@ -163,7 +153,7 @@ def nova_partida():
             flash('erro insperado', 'error')
     times = tabela_time.select_todos()
     partidas_sql = select(Partida)
-    partidas = db_session.execute(partidas_sql).scalars().all()
+    partidas = db_session.execute(partidas_sql).all()
 
     return render_template('partidas.html', partidas=partidas, times=times)
 
