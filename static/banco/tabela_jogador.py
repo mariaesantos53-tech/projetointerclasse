@@ -33,3 +33,19 @@ def salvar_jogadores(nome,posicao,numero_camisa,time_id):
         print('erro inesperado: {e}')
         flash('erro inesperado', 'error')
 
+
+def select_um(id_jogador):
+    jogador_sql = select(Jogador).where(Jogador.id == id_jogador)
+    jogador = db_session.execute(jogador_sql).scalar_one_or_none()
+    return jogador
+
+print(select_um(10))
+
+
+def select_por_time(id_time):
+    jogador_sql = select(Jogador).where(Jogador.time_id == id_time)
+    jogadores = db_session.execute(jogador_sql).scalars().all()
+    return jogadores
+print(select_por_time(10))
+
+

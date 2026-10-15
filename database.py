@@ -18,6 +18,9 @@ class Time(Base):
     turma = Column(String(20))
     responsavel = Column(String(100))
 
+    def __repr__(self):
+        return f"<Time {self.nome} >"
+
 
 class Jogador(Base):
     __tablename__ = "jogadores"
@@ -27,6 +30,9 @@ class Jogador(Base):
     posicao = Column(String(50))
     time_id = Column(Integer, ForeignKey("times.id", ondelete="SET NULL"))
     numero_camisa = Column(Integer, default=0)
+
+    def __repr__(self):
+        return f"<Jogador {self.nome} >"
 
 class Partida(Base):
     __tablename__ = "partidas"

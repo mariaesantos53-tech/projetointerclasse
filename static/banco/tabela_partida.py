@@ -44,4 +44,17 @@ def salvar():
         flash("ocorreu um erro ao adicionar time", "error")
         print(f"erro: {e}")
 
+def select_partida_por_time(id_time  ):
+    TimeCasa = aliased(Time)
+    TimeVisitante = aliased(Time)
+    partidas_sql = (
+        select(Partida, TimeCasa, TimeVisitante)
+        .join(TimeCasa, Partida.time_casa_id == TimeCasa.id)
+        .join(TimeVisitante, Partida.time_visitante_id == TimeVisitante.id)
+        .where(or_(id_time == Partida.time_casa_id, id_time == Partida.time_casa_id)
+    ))
 
+
+
+    partidas= db_session.execute(partidas_sql).all()
+    return partidas

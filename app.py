@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, g
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -7,6 +7,7 @@ from static.banco import tabela_time, tabela_jogador, tabela_partida
 
 app = Flask(__name__)
 app.secret_key = "chave-secreta-interclasse-2026"
+
 
 
 @app.route("/")
@@ -19,16 +20,15 @@ def dashboard():
 
     return render_template(
         "dashboard.html",
-        total_jogadores= jogadores,
-        total_times= times,
-        total_partidas= partidas,
+        total_jogadores=jogadores,
+        total_times=times,
+        total_partidas=partidas,
 
     )
 
 
 @app.route("/jogadores")
 def listar_jogadores():
-
     times = tabela_time.select_todos()
     jogadores = tabela_jogador.select_todos_jogadores()
     return render_template("jogadores.html", jogadores=jogadores)
@@ -57,8 +57,7 @@ def novo_jogador():
             flash('Preencha o time', 'erro')
 
         #     3 - salvar no banco
-        tabela_jogador.salvar_jogadores(nome=nome,numero_camisa=numero_camisa,posicao=posicao,time_id= time_id)
-
+        tabela_jogador.salvar_jogadores(nome=nome, numero_camisa=numero_camisa, posicao=posicao, time_id=time_id)
 
     #     select times para escolher no formulario
 
@@ -78,10 +77,10 @@ def listar_times():
 def novo_time():
     if request.method == "POST":
         # pegar os valores do form
-        nome = request.form.get("nome", "").strip()
-        responsavel = request.form.get("responsavel", "").strip()
-        turma = request.form.get("turma", "").strip()
-
+        nome = request.form.get("nome")
+        responsavel = request.form.get("responsavel")
+        turma = request.form.get("turma")
+        jogadores_ids = request.form.getlist("jogadores")
 
         # verificar se foi digitado
         if not nome:
@@ -92,24 +91,44 @@ def novo_time():
             flash("Preencha com o responsável", "error")
             return redirect(url_for("novo_time"))
 
-
         if not turma:
             flash("Preencha com a turma", "error")
             return redirect(url_for("novo_time"))
+       # salvar no banco
+        time =  tabela_time.salvar(nome=nome, responsavel=responsavel, turma=turma)
 
-        tabela_time.salvar(nome = nome, responsavel = responsavel, turma = turma)
+
+        if jogadores_ids:
+            for jogador_id in jogadores_ids:
+                jogador= tabela_jogador.select_um(jogador_id)
+                jogador.time_id = time.id
+                db_session.add(jogador)
+                db_session.commit()
 
     times = tabela_time.select_todos()
+    jogadores = tabela_jogador.select_todos_jogadores()
     print(times)
-    return render_template("times.html", times=times)
+    return render_template("times.html", times=times, jogadores=jogadores)
 
+
+@app.route("/time/<id_time>")
+def detalhes_time(id_time):
+    time = tabela_time.select_um(int(id_time))
+    jogadores = tabela_jogador.select_por_time(int(id_time))
+    partidas = tabela_partida.select_partida_por_time(int(id_time))
+    return render_template("time_detalhes.html",
+                           time=time,
+                           jogadores=jogadores,
+                           qtd_jogadores=len(jogadores),
+                           partidas=partidas,
+                           qtd_partidas=len(partidas)
+
+)
 
 @app.route("/partidas")
 def listar_partidas():
-
     partidas = tabela_partida.select_todas_partidas()
     return render_template("partidas.html", partidas=partidas)
-
 
 
 @app.route("/partidas/nova", methods=["GET", "POST"])
@@ -138,7 +157,8 @@ def nova_partida():
             flash('selecione times diferentes', 'error')
 
         try:
-            partidanova = Partida( time_casa_id= int(time_casa_id), time_visitante_id=int(time_visitante_id),gols_casa=gols_casa, gols_visitante=gols_visitante,data_partida=data_partida)
+            partidanova = Partida(time_casa_id=int(time_casa_id), time_visitante_id=int(time_visitante_id),
+                                  gols_casa=gols_casa, gols_visitante=gols_visitante, data_partida=data_partida)
             db_session.add(partidanova)
             db_session.commit()
             flash("Partida adicionada com sucesso", "success")
@@ -156,8 +176,6 @@ def nova_partida():
     partidas = db_session.execute(partidas_sql).all()
 
     return render_template('partidas.html', partidas=partidas, times=times)
-
-
 
 
 if __name__ == "__main__":
